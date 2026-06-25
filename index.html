@@ -203,16 +203,6 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',san
 .source-btn{font-family:inherit;font-size:11px;font-weight:600;letter-spacing:1px;padding:5px 12px;border-radius:5px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:color .15s,border-color .15s,background .15s}
 .source-btn:hover{color:#fff;border-color:#555}
 .source-btn.active{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#fff}
-/* LANG SELECTOR */
-.nav-lang-wrap{position:relative;flex-shrink:0}
-.nav-lang-btn{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:8px;padding:0 12px;height:36px;font-family:inherit;font-size:12px;font-weight:600;color:rgba(255,255,255,.75);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
-.nav-lang-btn:hover{background:rgba(255,255,255,.14);color:#fff}
-.lang-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:rgba(10,10,10,.97);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:130px;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-6px);transition:opacity .2s,transform .2s,visibility .2s;backdrop-filter:blur(20px);box-shadow:0 16px 48px rgba(0,0,0,.8);z-index:300}
-.nav-lang-wrap.open .lang-dropdown{opacity:1;visibility:visible;pointer-events:all;transform:translateY(0)}
-.lang-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;font-size:12px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;transition:background .15s,color .15s}
-.lang-item:hover{background:rgba(255,255,255,.07);color:#fff}
-.lang-item.active{color:#fff;background:rgba(255,255,255,.05)}
-.lang-flag{font-size:15px}
 /* RELOAD IFRAME BTN */
 .reload-btn{font-family:inherit;font-size:11px;font-weight:600;letter-spacing:1px;padding:5px 12px;border-radius:5px;border:1px solid rgba(255,255,255,.15);background:none;color:rgba(255,255,255,.5);cursor:pointer;transition:color .15s,border-color .15s,background .15s;margin-left:auto}
 .reload-btn:hover{color:#fff;border-color:#555;background:rgba(255,255,255,.07)}
@@ -352,18 +342,6 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',san
     <div class="nav-search-wrap">
       <span class="search-ic">⌕</span>
       <input type="text" id="search-input" placeholder="Rechercher…" autocomplete="off">
-    </div>
-    <div class="nav-lang-wrap" id="nav-lang-wrap">
-      <button class="nav-lang-btn" onclick="toggleLangMenu()">
-        <span id="lang-flag">🇫🇷</span>
-        <span id="lang-label">FR</span>
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style="transition:transform .2s"><polyline points="2 3.5 5 6.5 8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <div class="lang-dropdown" id="lang-dropdown">
-        <div class="lang-item active" id="lang-fr" onclick="setLang('fr-FR','FR','🇫🇷')"><span class="lang-flag">🇫🇷</span> Français</div>
-        <div class="lang-item" id="lang-en" onclick="setLang('en-US','EN','🇬🇧')"><span class="lang-flag">🇬🇧</span> English</div>
-        <div class="lang-item" id="lang-es" onclick="setLang('es-ES','ES','🇪🇸')"><span class="lang-flag">🇪🇸</span> Español</div>
-      </div>
     </div>
     <div class="nav-profile-wrap" id="nav-profile-wrap">
       <button class="nav-auth-btn" id="nav-auth-btn" onclick="onAuthBtnClick()">
@@ -554,6 +532,10 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',san
     <button class="source-btn" onclick="setSource(5,this)">VidSrc</button>
     <button class="source-btn" onclick="setSource(6,this)">VidSrc.me</button>
     <button class="source-btn" onclick="setSource(7,this)">Videasy</button>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,.1);margin:0 6px;flex-shrink:0"></div>
+    <span class="player-source-label">Langue</span>
+    <button class="source-btn active" id="lang-vo-btn" onclick="setPlayerLang('en',this)">VO</button>
+    <button class="source-btn" id="lang-vf-btn" onclick="setPlayerLang('fr',this)">VF</button>
     <button class="reload-btn" onclick="reloadIframe()" title="Recharger (contourne certaines pubs)">↺ Recharger</button>
   </div>
 </div>
@@ -674,7 +656,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',san
 const KEY='8265bd1679663a7ea12ac168da84d2e8';
 const IMG='https://image.tmdb.org/t/p/';
 const API='https://api.themoviedb.org/3';
-let LANG=localStorage.getItem('nvm_lang')||'fr-FR';
+const LANG='fr-FR';
 
 let heroMovies=[],heroIdx=0,heroTimer;
 let currentGenreId=null,currentGenrePage=1,currentGenreName='';
@@ -907,29 +889,6 @@ function removeFromHistory(id){
   openHistory();
 }
 
-/* ── LANG ── */
-const LANG_MAP={'fr-FR':{label:'FR',flag:'🇫🇷',id:'lang-fr'},'en-US':{label:'EN',flag:'🇬🇧',id:'lang-en'},'es-ES':{label:'ES',flag:'🇪🇸',id:'lang-es'}};
-function toggleLangMenu(){document.getElementById('nav-lang-wrap').classList.toggle('open');}
-function closeLangMenu(){document.getElementById('nav-lang-wrap').classList.remove('open');}
-function setLang(lang,label,flag){
-  LANG=lang;
-  localStorage.setItem('nvm_lang',lang);
-  document.getElementById('lang-flag').textContent=flag;
-  document.getElementById('lang-label').textContent=label;
-  document.querySelectorAll('.lang-item').forEach(el=>el.classList.remove('active'));
-  document.getElementById(LANG_MAP[lang].id).classList.add('active');
-  closeLangMenu();
-  // Reload page content with new language
-  init();
-}
-function initLangUI(){
-  const l=LANG_MAP[LANG]||LANG_MAP['fr-FR'];
-  document.getElementById('lang-flag').textContent=l.flag;
-  document.getElementById('lang-label').textContent=l.label;
-  document.querySelectorAll('.lang-item').forEach(el=>el.classList.remove('active'));
-  document.getElementById(l.id).classList.add('active');
-}
-
 /* ── RELOAD IFRAME ── */
 function reloadIframe(){
   const iframe=document.getElementById('player-iframe');
@@ -1054,8 +1013,10 @@ function mcToggleFav(){if(currentMovieModal)toggleFav(currentMovieModal,null);}
 
 /* ── PLAYER ── */
 let currentPlayerMovie=null;
+let currentSourceIdx=0;
+let playerLang='en';
 const SOURCES=[
-  m=>`https://vidlink.pro/movie/${m.id}?primaryColor=ffffff&secondaryColor=ffffff&iconColor=ffffff&autoplay=true`,
+  m=>`https://vidlink.pro/movie/${m.id}?primaryColor=ffffff&secondaryColor=ffffff&iconColor=ffffff&autoplay=true&lang=${playerLang}`,
   m=>`https://autoembed.co/movie/tmdb/${m.id}`,
   m=>`https://multiembed.mov/?video_id=${m.id}&tmdb=1`,
   m=>`https://www.2embed.cc/embed/${m.id}`,
@@ -1064,9 +1025,19 @@ const SOURCES=[
   m=>`https://vidsrc.me/embed/movie?tmdb=${m.id}`,
   m=>`https://player.videasy.net/movie/${m.id}`,
 ];
+function setPlayerLang(lang,btn){
+  playerLang=lang;
+  document.querySelectorAll('#lang-vo-btn,#lang-vf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Only VidLink supports lang param — reload if on source 0
+  if(currentSourceIdx===0&&currentPlayerMovie){
+    document.getElementById('player-iframe').src=SOURCES[0](currentPlayerMovie);
+  }
+}
 const DEFAULT_SOURCE=0;
 function setSource(idx,btn){
   if(!currentPlayerMovie)return;
+  currentSourceIdx=idx;
   document.querySelectorAll('.source-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('player-iframe').src=SOURCES[idx](currentPlayerMovie);
@@ -1080,6 +1051,10 @@ async function openPlayer(m){
   const iframe=document.getElementById('player-iframe');
   iframe.src=SOURCES[DEFAULT_SOURCE](m);
   document.querySelectorAll('.source-btn').forEach((b,i)=>b.classList.toggle('active',i===DEFAULT_SOURCE));
+  currentSourceIdx=DEFAULT_SOURCE;
+  // restore lang btn state
+  document.getElementById('lang-vo-btn').classList.toggle('active',playerLang==='en');
+  document.getElementById('lang-vf-btn').classList.toggle('active',playerLang==='fr');
   document.getElementById('modal').classList.add('open');
   document.title=(m.title||m.name||'')+' — NVMSTREAM';
   document.body.style.overflow='hidden';
@@ -1165,8 +1140,6 @@ const _modalPlayer=document.getElementById('modal');
 document.addEventListener('click',e=>{
   if(!_navCat.contains(e.target))closeCatMenu();
   if(!_navProf.contains(e.target))closeProfileDropdown();
-  const _navLang=document.getElementById('nav-lang-wrap');
-  if(!_navLang.contains(e.target))closeLangMenu();
   if(e.target===_authModal)closeAuthModal();
   if(e.target===_movieModal)closeMovieModal();
   if(e.target===_histModal)_histModal.classList.remove('open');
@@ -1393,7 +1366,6 @@ function mergePages(...pages){
 /* ── INIT ── */
 async function init(){
   loadSession();
-  initLangUI();
 
   // Wave 1 : above-the-fold (4 pages popular/top for big rows)
   const [tr1,np1,po1,po2,po3,tp1,tp2,tp3]=await Promise.all([
