@@ -1500,6 +1500,7 @@ function makeCard(m,withProgress=false){
  // apply active filters immediately
  if(!cardPassesFilters(m))d.style.display='none';
  d.querySelector('.card-fav').addEventListener('click',e=>toggleFav(m,e));
+ d.querySelector('.card-play-btn').addEventListener('click',e=>{e.stopPropagation();openPlayer(m);});
  d.addEventListener('click',()=>openMovieModal(m));
  return d;
 }
